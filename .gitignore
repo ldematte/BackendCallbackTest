@@ -1,0 +1,11 @@
+Debug/*
+Release/*
+packages/*
+*.suo
+*.user
+*.sdf
+*.opensdf
+*/bin/*
+*/obj/*
+*.dll
+*.tlb

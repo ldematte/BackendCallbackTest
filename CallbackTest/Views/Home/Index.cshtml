@@ -1,0 +1,60 @@
+﻿@{
+   ViewBag.Title = "ASP.NET + SignalR callback";
+}
+<h2>@ViewBag.Title.</h2>
+
+@section Scripts {
+
+   <script src="/Scripts/jquery.signalR-2.2.0.min.js"></script>
+   <script src="/signalr/hubs"></script>
+
+   <script type="text/javascript">
+      $(function () {
+         // Declare a proxy to reference the hub.
+         var resultHubConnectionId;
+         var submissionInfo = $("#submissionInfo");
+
+         var handleResult = function (connectionId, message) {
+            submissionInfo.text("Done! CliendId = " + resultHubConnectionId + " ServerId = " + connectionId + " Message = " + message);
+         };
+
+         if ($.connection && $.connection.resultHub) {
+            var resultHub = $.connection.resultHub;
+            resultHub.client.sendResult = handleResult;
+            $.connection.hub.start().done(function () {
+               // TODO: place in a proper object?
+               resultHubConnectionId = $.connection.hub.id;
+            });
+         }
+
+         $("#btnGo").click(function () {
+            submissionInfo.text("Submitting...");
+
+            $.ajax("Home/SubmitRequest", {
+               type: "POST",
+               data: { connectionId: resultHubConnectionId }
+
+            }).done(function (data, textStatus, jqXHR) {
+               if (jqXHR.status == 202) {
+                  submissionInfo.text("Submitted...");
+               }
+               else {
+                  handleResult(data.connection, data.message);
+               }
+            });
+         });
+      });
+   </script>
+}
+
+<p>
+   This example demonstrates how to handle asynchronous execution in the back-end, by using singalR.<br />
+   If signalR is present (and connected), the post handler returns immediately with 202 "Accepted - further processing".<br />
+   Then, the back-end code uses signalR to push the result to the cliend, when it is available.
+</p>
+<p>
+   If signalR is <em>not</em> present, the post handler returns the result directly, but the handler itself uses async/await to run the request in background, asynchronously.
+</p>
+
+<div id="submissionInfo"></div>
+<button id="btnGo">Go!</button>
